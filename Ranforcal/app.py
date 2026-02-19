@@ -1,34 +1,50 @@
 import streamlit as st
 import pandas as pd
-import joblib
+from sklearn.ensemble import RandomForestClassifier
+
+st.title("🚢 Titanic Survival Prediction App")
 
 # -----------------------------
-# Load Model
+# Load Dataset
 # -----------------------------
-model = joblib.load("aqi_random_forest_model.pkl")
+@st.cache_data
+def load_data():
+    return pd.read_csv("titanic.csv")
 
-st.title("🚢 Titanic Survival Prediction (Random Forest)")
-
-st.write("Enter passenger details to predict survival:")
-
-# -----------------------------
-# User Inputs
-# -----------------------------
-pclass = st.selectbox("Passenger Class", [1, 2, 3])
-age = st.slider("Age", 0, 80, 25)
-sibsp = st.slider("Siblings / Spouses Aboard", 0, 5, 0)
-parch = st.slider("Parents / Children Aboard", 0, 5, 0)
-fare = st.slider("Fare", 0, 500, 50)
-embarked = st.selectbox("Embarked Port", ["C", "Q", "S"])
-
-# Convert embarked to numeric (same training assumption)
-embarked_map = {"C": 0, "Q": 1, "S": 2}
-embarked = embarked_map[embarked]
+df = load_data()
 
 # -----------------------------
-# Prepare Input Data
-# (Name and Sex were dropped in notebook)
+# Preprocessing (same as notebook)
 # -----------------------------
+df = df.drop(["Name", "Sex"], axis=1)
+
+df["Age"].fillna(df["Age"].median(), inplace=True)
+df["Embarked"].fillna(df["Embarked"].mode()[0], inplace=True)
+
+# Convert Embarked to numeric
+df["Embarked"] = df["Embarked"].map({"C": 0, "Q": 1, "S": 2})
+
+X = df.drop("Survived", axis=1)
+y = df["Survived"]
+
+# Train Model
+model = RandomForestClassifier()
+model.fit(X, y)
+
+# -----------------------------
+# User Input
+# -----------------------------
+st.sidebar.header("Enter Passenger Details")
+
+pclass = st.sidebar.selectbox("Passenger Class", [1, 2, 3])
+age = st.sidebar.slider("Age", 0, 80, 25)
+sibsp = st.sidebar.slider("Siblings / Spouses", 0, 5, 0)
+parch = st.sidebar.slider("Parents / Children", 0, 5, 0)
+fare = st.sidebar.slider("Fare", 0, 500, 50)
+embarked = st.sidebar.selectbox("Embarked", ["C", "Q", "S"])
+
+embarked = {"C": 0, "Q": 1, "S": 2}[embarked]
+
 input_data = pd.DataFrame({
     "Pclass": [pclass],
     "Age": [age],
@@ -41,10 +57,10 @@ input_data = pd.DataFrame({
 # -----------------------------
 # Prediction
 # -----------------------------
-if st.button("Predict"):
+if st.button("Predict Survival"):
     prediction = model.predict(input_data)
 
     if prediction[0] == 1:
-        st.success("🎉 Passenger Survived")
+        st.success("🎉 Passenger Survived!")
     else:
         st.error("😢 Passenger Did Not Survive")

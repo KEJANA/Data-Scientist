@@ -1,38 +1,25 @@
 import streamlit as st
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+import joblib
+import os
 
-st.title("🚢 Titanic Survival Prediction App")
+st.set_page_config(page_title="Titanic Survival Prediction", layout="centered")
 
-# -----------------------------
-# Load Dataset
-# -----------------------------
-@st.cache_data
-def load_data():
-    return pd.read_csv("titanic.csv")
-
-df = load_data()
+st.title("🚢 Titanic Survival Prediction (Random Forest)")
 
 # -----------------------------
-# Preprocessing (same as notebook)
+# Load Model Safely
 # -----------------------------
-df = df.drop(["Name", "Sex"], axis=1)
+MODEL_PATH = "aqi_random_forest_model.pkl"
 
-df["Age"].fillna(df["Age"].median(), inplace=True)
-df["Embarked"].fillna(df["Embarked"].mode()[0], inplace=True)
+if not os.path.exists(MODEL_PATH):
+    st.error("Model file 'aqi_random_forest_model.pkl' not found in repository.")
+    st.stop()
 
-# Convert Embarked to numeric
-df["Embarked"] = df["Embarked"].map({"C": 0, "Q": 1, "S": 2})
-
-X = df.drop("Survived", axis=1)
-y = df["Survived"]
-
-# Train Model
-model = RandomForestClassifier()
-model.fit(X, y)
+model = joblib.load(MODEL_PATH)
 
 # -----------------------------
-# User Input
+# User Inputs
 # -----------------------------
 st.sidebar.header("Enter Passenger Details")
 
@@ -43,8 +30,14 @@ parch = st.sidebar.slider("Parents / Children", 0, 5, 0)
 fare = st.sidebar.slider("Fare", 0, 500, 50)
 embarked = st.sidebar.selectbox("Embarked", ["C", "Q", "S"])
 
-embarked = {"C": 0, "Q": 1, "S": 2}[embarked]
+# same encoding used during training
+embarked_map = {"C": 0, "Q": 1, "S": 2}
+embarked = embarked_map[embarked]
 
+# -----------------------------
+# Prepare Input Data
+# (Name and Sex were dropped in training)
+# -----------------------------
 input_data = pd.DataFrame({
     "Pclass": [pclass],
     "Age": [age],
@@ -61,6 +54,6 @@ if st.button("Predict Survival"):
     prediction = model.predict(input_data)
 
     if prediction[0] == 1:
-        st.success("🎉 Passenger Survived!")
+        st.success("🎉 Passenger Survived")
     else:
         st.error("😢 Passenger Did Not Survive")

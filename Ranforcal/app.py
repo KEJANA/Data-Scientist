@@ -1,26 +1,26 @@
 import streamlit as st
 import joblib
 import numpy as np
+import os
 
-# Load trained model
-model = joblib.load("aqi_random_forest_model.pkl")
+st.title("🌫️ AQI Prediction - Random Forest")
 
-st.title("🚢 Titanic Survival Prediction (Random Forest)")
-st.write("Enter passenger details to predict survival")
+# Correct model path
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "aqi_random_forest_model.pkl")
 
-# Input fields (numeric features only)
-Pclass = st.number_input("Passenger Class (1-3)", min_value=1, max_value=3, value=1)
-Age = st.number_input("Age", min_value=0.0, value=25.0)
-SibSp = st.number_input("Siblings/Spouses Aboard", min_value=0, value=0)
-Parch = st.number_input("Parents/Children Aboard", min_value=0, value=0)
-Fare = st.number_input("Fare", min_value=0.0, value=50.0)
+# Load model safely
+model = joblib.load(MODEL_PATH)
 
-# Predict button
-if st.button("Predict Survival"):
-    input_data = np.array([[Pclass, Age, SibSp, Parch, Fare]])
+st.write("Enter environmental parameters")
+
+# Example inputs (change based on your dataset features)
+feature1 = st.number_input("Feature 1")
+feature2 = st.number_input("Feature 2")
+feature3 = st.number_input("Feature 3")
+feature4 = st.number_input("Feature 4")
+feature5 = st.number_input("Feature 5")
+
+if st.button("Predict AQI"):
+    input_data = np.array([[feature1, feature2, feature3, feature4, feature5]])
     prediction = model.predict(input_data)
-
-    if prediction[0] == 1:
-        st.success("🎉 Passenger Survived")
-    else:
-        st.error("❌ Passenger Did Not Survive")
+    st.success(f"Predicted AQI Category: {prediction[0]}")

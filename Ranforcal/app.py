@@ -4,19 +4,30 @@ import joblib
 import os
 
 st.set_page_config(page_title="Titanic Survival Prediction", layout="centered")
-
 st.title("🚢 Titanic Survival Prediction (Random Forest)")
 
 # -----------------------------
-# Load Model Safely
+# Find Model Path (robust for Streamlit Cloud)
 # -----------------------------
-MODEL_PATH = "aqi_random_forest_model.pkl"
+possible_paths = [
+    "aqi_random_forest_model.pkl",
+    "models/aqi_random_forest_model.pkl",
+    "./aqi_random_forest_model.pkl",
+    "./models/aqi_random_forest_model.pkl"
+]
 
-if not os.path.exists(MODEL_PATH):
-    st.error("Model file 'aqi_random_forest_model.pkl' not found in repository.")
+model_path = None
+for path in possible_paths:
+    if os.path.exists(path):
+        model_path = path
+        break
+
+if model_path is None:
+    st.error("❌ Model file 'aqi_random_forest_model.pkl' not found. Upload it to repo root or models/ folder.")
     st.stop()
 
-model = joblib.load(MODEL_PATH)
+# Load model
+model = joblib.load(model_path)
 
 # -----------------------------
 # User Inputs
@@ -32,11 +43,11 @@ embarked = st.sidebar.selectbox("Embarked", ["C", "Q", "S"])
 
 # same encoding used during training
 embarked_map = {"C": 0, "Q": 1, "S": 2}
-embarked = embarked_map[embarked]
+embarked_val = embarked_map[embarked]
 
 # -----------------------------
 # Prepare Input Data
-# (Name and Sex were dropped in training)
+# (Name and Sex were dropped during training)
 # -----------------------------
 input_data = pd.DataFrame({
     "Pclass": [pclass],
@@ -44,7 +55,7 @@ input_data = pd.DataFrame({
     "SibSp": [sibsp],
     "Parch": [parch],
     "Fare": [fare],
-    "Embarked": [embarked]
+    "Embarked": [embarked_val]
 })
 
 # -----------------------------
@@ -52,7 +63,6 @@ input_data = pd.DataFrame({
 # -----------------------------
 if st.button("Predict Survival"):
     prediction = model.predict(input_data)
-
     if prediction[0] == 1:
         st.success("🎉 Passenger Survived")
     else:

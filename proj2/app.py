@@ -129,4 +129,4 @@ if st.button("Predict"):
 # =========================
 
 st.markdown("---")
-st.markdown("Developed by Arun | Heart Disease ML Predictor")
+st.markdown("Developed by Keja | Heart Disease ML Predictor")

@@ -85,4 +85,4 @@ if st.button("Predict Diagnosis"):
 # -----------------------------
 
 st.markdown("---")
-st.caption("Developed by Arun | KNN ML Project 🚀")
+st.caption("Developed by Keja | KNN ML Project 🚀")
